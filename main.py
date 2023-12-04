@@ -1,5 +1,6 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col,sum,month,year,to_date
+from pyspark.sql.functions import col,sum,month,year,to_date,when
+import pandas as pd
 
 spark = SparkSession.builder.appName("Analyse de Vente").getOrCreate()
 
@@ -18,6 +19,14 @@ df_products = spark.read.option("delimiter", "\t").csv("produits.txt", header=Tr
 df_products.show()
 
 
+pays_xlsx = pd.read_excel("Pays.xlsx")
+pays_df = spark.createDataFrame(pays_xlsx)
+pays_df.printSchema()
+pays_df.show()
+
+
+
+
 def visualiser_ventes_par_produit():    
     print("Visualisation du nombre de ventes par produit.")
     df_combined = df_orders.join(df_products, df_orders.Product == df_products.Produit, "inner")
@@ -33,6 +42,22 @@ def visualiser_evolution_ventes():
     print("Visualisation de l'évolution des ventes au fil des mois ou des années.")
     df_order = df_orders.withColumn("Mois", month("Date"))
     df_order.show()
+    df_order = df_order.withColumn(
+    "Mois",
+    when(col("Mois") == 1, "Janvier")
+    .when(col("Mois") == 2, "Février")
+    .when(col("Mois") == 3, "Mars")
+    .when(col("Mois") == 4, "Avril")
+    .when(col("Mois") == 5, "Mai")
+    .when(col("Mois") == 6, "Juin")
+    .when(col("Mois") == 7, "Juillet")
+    .when(col("Mois") == 8, "Août")
+    .when(col("Mois") == 9, "Septembre")
+    .when(col("Mois") == 10, "Octobre")
+    .when(col("Mois") == 11, "Novembre")
+    .when(col("Mois") == 12, "Décembre")
+    .otherwise("Inconnu")  # Gestion de cas par défaut
+)
     resultats = df_order.groupBy("Mois").agg(sum("SalesQuantity").alias("NombreVentes"))
 
     resultats.show()
