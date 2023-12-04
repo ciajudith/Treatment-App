@@ -1,0 +1,8 @@
+{
+    "hdinsightJobSubmission.ClusterConf": [
+        {
+            "name": "SQL Server Big Data: https://localhost:30443 (root)",
+            "filePath": "d:\\Treatment App\\main.py"
+        }
+    ]
+}
