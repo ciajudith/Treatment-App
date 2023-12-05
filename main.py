@@ -1,6 +1,8 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col,sum,month,year,to_date,when
 import pandas as pd
+import qrcode as qrcode
+import os
 
 spark = SparkSession.builder.appName("Analyse de Vente").getOrCreate()
 
@@ -12,31 +14,30 @@ df_orders = df_orders.withColumn("SalesQuantity", col("SalesQuantity").cast("int
         .withColumn("TotalCost", col("TotalCost").cast("float")) \
         .withColumn("TotalPrice", col("TotalPrice").cast("float")) \
         .withColumn("TotalProfit", col("TotalProfit").cast("float"))
-    
 df_orders.show()
 
 df_products = spark.read.option("delimiter", "\t").csv("produits.txt", header=True)
 df_products.show()
-
 
 pays_xlsx = pd.read_excel("Pays.xlsx")
 pays_df = spark.createDataFrame(pays_xlsx)
 pays_df.printSchema()
 pays_df.show()
 
-
-
-
 def visualiser_ventes_par_produit():    
     print("Visualisation du nombre de ventes par produit.")
     df_combined = df_orders.join(df_products, df_orders.Product == df_products.Produit, "inner")
     resultats = df_combined.groupBy("Product").agg(sum("SalesQuantity").alias("NombreVentes"))
-    resultats.show()
+    resultats.show()  
+    nom_fichier_csv = "visualiser_ventes_par_produit.csv"
+    generate_and_rename_csv(resultats, nom_fichier_csv)
+    generate_qr_code(f"D:/Treatment App/Data/{nom_fichier_csv}/{nom_fichier_csv}", 'D:/Treatment App/Images/visualiser_ventes_par_produit.png')
 
 def visualiser_chiffre_affaire():
     print("Visualisation du chiffre d'affaires.")
     resultats = df_orders.groupBy().agg(sum("TotalPrice").alias("ChiffreAffaires"))
     resultats.show()
+    
 
 def visualiser_evolution_ventes():
     print("Visualisation de l'évolution des ventes au fil des mois ou des années.")
@@ -56,11 +57,13 @@ def visualiser_evolution_ventes():
     .when(col("Mois") == 10, "Octobre")
     .when(col("Mois") == 11, "Novembre")
     .when(col("Mois") == 12, "Décembre")
-    .otherwise("Inconnu")  # Gestion de cas par défaut
+    .otherwise("Inconnu")
 )
     resultats = df_order.groupBy("Mois").agg(sum("SalesQuantity").alias("NombreVentes"))
-
     resultats.show()
+    nom_fichier_csv = "visualiser_evolution_ventes.csv"
+    generate_and_rename_csv(resultats, nom_fichier_csv)
+    generate_qr_code(f"D:/Treatment App/Data/{nom_fichier_csv}/{nom_fichier_csv}", 'D:/Treatment App/Images/visualiser_ventes_par_produit.png')
 
 
 def visualiser_ventes_par_categorie():
@@ -69,6 +72,33 @@ def visualiser_ventes_par_categorie():
     resultats = df_combined.groupBy("Categories").agg(sum("SalesQuantity").alias("NombreVentesParCategorie"))
 
     resultats.show()
+
+
+def generate_and_rename_csv(resultats, nom_fichier_csv):
+    resultats.write.options(header='True', delimiter=',') \
+    .mode("overwrite") \
+    .csv(f"D:/Treatment App/Data/{nom_fichier_csv}")
+    dossier = f"D:/Treatment App/Data/{nom_fichier_csv}"
+    for fichier in os.listdir(dossier):
+        if fichier.startswith("part-") and fichier.endswith(".csv"):
+            ancien_nom = os.path.join(dossier, fichier)
+            nouveau_nom = os.path.join(dossier, nom_fichier_csv)
+            os.rename(ancien_nom, nouveau_nom)
+            
+def generate_qr_code(file_path, output_path='qrcode.png'):
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+
+    with open(file_path, 'rb') as file:
+        qr.add_data(file.read())
+        qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(output_path)
 
 def main():
     
