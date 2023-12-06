@@ -37,6 +37,9 @@ def visualiser_chiffre_affaire():
     print("Visualisation du chiffre d'affaires.")
     resultats = df_orders.groupBy().agg(sum("TotalPrice").alias("ChiffreAffaires"))
     resultats.show()
+    nom_fichier_csv = "visualiser_chiffre_affaire.csv"
+    generate_and_rename_csv(resultats, nom_fichier_csv)
+    generate_qr_code(f"D:/Treatment App/Data/{nom_fichier_csv}/{nom_fichier_csv}", 'D:/Treatment App/Images/visualiser_chiffre_affaire.png')
     
 
 def visualiser_evolution_ventes():
@@ -72,6 +75,9 @@ def visualiser_ventes_par_categorie():
     resultats = df_combined.groupBy("Categories").agg(sum("SalesQuantity").alias("NombreVentesParCategorie"))
 
     resultats.show()
+    nom_fichier_csv = "visualiser_ventes_par_categorie.csv"
+    generate_and_rename_csv(resultats, nom_fichier_csv)
+    generate_qr_code(f"D:/Treatment App/Data/{nom_fichier_csv}/{nom_fichier_csv}", 'D:/Treatment App/Images/visualiser_ventes_par_categorie.png')
 
 
 def generate_and_rename_csv(resultats, nom_fichier_csv):
