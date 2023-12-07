@@ -66,7 +66,7 @@ def visualiser_evolution_ventes():
     resultats.show()
     nom_fichier_csv = "visualiser_evolution_ventes.csv"
     generate_and_rename_csv(resultats, nom_fichier_csv)
-    generate_qr_code(f"D:/Treatment App/Data/{nom_fichier_csv}/{nom_fichier_csv}", 'D:/Treatment App/Images/visualiser_ventes_par_produit.png')
+    generate_qr_code(f"D:/Treatment App/Data/{nom_fichier_csv}/{nom_fichier_csv}", 'D:/Treatment App/Images/visualiser_evolution_ventes.png')
 
 
 def visualiser_ventes_par_categorie():
